@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Navbar, Nav, Container, Badge, NavDropdown, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-// IMPORTED FaHeart HERE
-import { FaShoppingCart, FaUser, FaStore, FaUserShield, FaSignOutAlt, FaBars, FaHeart } from 'react-icons/fa';
+import { 
+  FaShoppingCart, 
+  FaUser, 
+  FaStore, 
+  FaUserShield, 
+  FaSignOutAlt, 
+  FaBars, 
+  FaHeart, 
+  FaSignInAlt 
+} from 'react-icons/fa';
 
 const Navigation = () => {
   const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0); // NEW: Wishlist count state
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [userInfo, setUserInfo] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
@@ -14,7 +22,7 @@ const Navigation = () => {
   // Scroll effect for Navbar styling
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      if (window.scrollY > 30) {
         setScrolled(true);
       } else {
         setScrolled(false);
@@ -27,115 +35,127 @@ const Navigation = () => {
   // Update counts from localStorage
   useEffect(() => {
     const updateState = () => {
-      const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-      const wishlistItems = JSON.parse(localStorage.getItem('wishlistItems')) || []; // Read wishlist
-      const user = JSON.parse(localStorage.getItem('userInfo'));
-      
-      const cCount = cartItems.reduce((acc, item) => acc + Number(item.qty), 0);
-      
-      setCartCount(cCount);
-      setWishlistCount(wishlistItems.length); // Update wishlist count
-      setUserInfo(user);
+      try {
+        const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+        const wishlistItems = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+        const user = JSON.parse(localStorage.getItem('userInfo'));
+        
+        const cCount = Array.isArray(cartItems) ? cartItems.reduce((acc, item) => acc + Number(item.qty || 1), 0) : 0;
+        
+        setCartCount(cCount);
+        setWishlistCount(Array.isArray(wishlistItems) ? wishlistItems.length : 0);
+        setUserInfo(user);
+      } catch (err) {
+        console.error('Storage parse error', err);
+      }
     };
     
     updateState();
     window.addEventListener('storage', updateState);
-    return () => window.removeEventListener('storage', updateState);
+    window.addEventListener('cartUpdated', updateState);
+    return () => {
+      window.removeEventListener('storage', updateState);
+      window.removeEventListener('cartUpdated', updateState);
+    };
   }, []);
 
   const logoutHandler = () => {
     localStorage.removeItem('userInfo');
-    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event('storage'));
     navigate('/login');
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    return parts[0].charAt(0).toUpperCase();
   };
 
   return (
     <Navbar 
       expand="lg" 
       fixed="top"
-      className={`py-1 transition-all ${scrolled ? 'shadow-lg' : ''}`}
-      style={{ 
-        background: scrolled ? 'rgba(15, 32, 39, 0.95)' : 'rgba(15, 32, 39, 0.9)', 
-        backdropFilter: 'blur(10px)',
-        transition: 'all 0.3s ease',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
-      }}
+      className={`elite-navbar ${scrolled ? 'scrolled' : ''}`}
       variant="dark"
     >
       <Container>
-        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center fw-bold fs-5">
-          <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: '32px', height: '32px' }}>
-             <FaStore className="text-primary" size={16} />
+        {/* Brand Logo */}
+        <Navbar.Brand as={Link} to="/" className="elite-brand-logo">
+          <div className="elite-logo-icon">
+            <FaStore size={18} />
           </div>
-          <span className="text-white">EliteShop</span>
+          <span className="elite-logo-text">
+            Elite<span className="elite-logo-accent">Shop</span>
+          </span>
         </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 text-white shadow-none">
-            <FaBars size={20} />
+        {/* Mobile Toggle */}
+        <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 text-white shadow-none p-1">
+          <FaBars size={20} />
         </Navbar.Toggle>
 
+        {/* Navigation Items */}
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto align-items-center gap-3">
+          <Nav className="ms-auto align-items-center gap-3 pt-3 pt-lg-0">
             
-            {userInfo && (
-              <Nav.Link as={Link} to="/admin" className="text-decoration-none">
-                 <Button variant="outline-danger" size="sm" className="d-flex align-items-center fw-bold rounded-pill px-3 py-1" style={{ fontSize: '0.8rem' }}>
-                    <FaUserShield className="me-2" /> Admin
-                 </Button>
-              </Nav.Link>
-            )}
+            {/* Admin Dashboard Pill */}
+            <Link to="/admin" className="elite-admin-pill">
+              <FaUserShield size={14} className="text-danger" />
+              <span>Admin</span>
+            </Link>
 
-            {/* --- NEW: WISHLIST ICON --- */}
-            <Nav.Link as={Link} to="/wishlist" className="position-relative text-white opacity-75 hover-opacity-100">
-              <FaHeart size={20} className={wishlistCount > 0 ? "text-danger pulse-soft" : ""} />
+            {/* Wishlist Icon Button */}
+            <Link to="/wishlist" className="elite-nav-icon-btn" title="Wishlist">
+              <FaHeart size={16} className={wishlistCount > 0 ? 'text-danger pulse-soft' : ''} />
               {wishlistCount > 0 && (
-                <Badge 
-                  bg="danger" 
-                  text="white" 
-                  className="position-absolute top-0 start-100 translate-middle rounded-circle border border-dark d-flex align-items-center justify-content-center shadow-sm"
-                  style={{ width: '18px', height: '18px', fontSize: '0.7rem' }}
-                >
+                <span className="elite-badge-pill elite-badge-wishlist">
                   {wishlistCount}
-                </Badge>
+                </span>
               )}
-            </Nav.Link>
+            </Link>
 
-            {/* --- CART ICON --- */}
-            <Nav.Link as={Link} to="/card" className="position-relative text-white opacity-75 hover-opacity-100">
-              <FaShoppingCart size={20} />
+            {/* Cart Icon Button */}
+            <Link to="/card" className="elite-nav-icon-btn" title="Shopping Bag">
+              <FaShoppingCart size={16} />
               {cartCount > 0 && (
-                <Badge 
-                  bg="warning" 
-                  text="dark" 
-                  className="position-absolute top-0 start-100 translate-middle rounded-circle border border-dark d-flex align-items-center justify-content-center shadow-sm"
-                  style={{ width: '18px', height: '18px', fontSize: '0.7rem' }}
-                >
+                <span className="elite-badge-pill elite-badge-cart">
                   {cartCount}
-                </Badge>
+                </span>
               )}
-            </Nav.Link>
+            </Link>
 
-            {/* --- USER PROFILE DROPDOWN --- */}
+            {/* User Account / Auth Action */}
             {userInfo ? (
               <NavDropdown 
                 title={
-                  <div className="d-flex align-items-center text-white">
-                    <div className="border border-secondary rounded-circle p-1 me-2 d-flex align-items-center justify-content-center" style={{ width: '30px', height: '30px' }}>
-                        <FaUser size={14} />
+                  <div className="elite-user-chip">
+                    <div className="elite-user-avatar">
+                      {getInitials(userInfo.name)}
                     </div>
-                    <span className="fw-semibold small">{userInfo.name.split(' ')[0]}</span>
+                    <span className="small fw-semibold">
+                      {userInfo.name.split(' ')[0]}
+                    </span>
                   </div>
                 } 
                 id="username"
                 align="end"
+                className="elite-user-dropdown"
               >
-                <NavDropdown.Item as={Link} to="/profile" className="small">User Profile</NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/profile">
+                  <FaUser size={13} className="text-primary" /> User Profile
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin">
+                  <FaUserShield size={13} className="text-danger" /> Admin Dashboard
+                </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item onClick={logoutHandler} className="text-danger small fw-bold">Logout</NavDropdown.Item>
+                <NavDropdown.Item onClick={logoutHandler} className="text-danger fw-semibold">
+                  <FaSignOutAlt size={13} /> Sign Out
+                </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Link to="/login">
-                <Button variant="primary" size="sm" className="fw-bold px-4 rounded-pill custom-btn border-0 shadow-sm">Sign In</Button>
+              <Link to="/login" className="elite-signin-btn">
+                <FaSignInAlt size={13} />
+                <span>Sign In</span>
               </Link>
             )}
 

@@ -32,8 +32,38 @@ const ScrollToTop = () => {
   return null;
 };
 
+const AppContent = () => {
+  const { pathname } = useLocation();
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+
+  return (
+    <div className="d-flex flex-column min-vh-100">
+      {!isAuthPage && <Navbar />}
+      
+      <main className="flex-grow-1">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/card" element={<CardPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/product/:id" element={<ProductPage />} />
+
+          {/* Private / User Routes */}
+          <Route path="/profile" element={<ProfilePage />} />
+          
+          {/* Admin Route */}
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Routes>
+      </main>
+      
+      {!isAuthPage && <Footer />}
+    </div>
+  );
+};
+
 function App() {
-  
   // --- INITIALIZE ANIMATIONS ---
   useEffect(() => {
     AOS.init({
@@ -46,31 +76,7 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
-      
-      {/* Wrapper for Sticky Footer */}
-      <div className="d-flex flex-column min-vh-100">
-        <Navbar />
-        
-        <main className="flex-grow-1">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/card" element={<CardPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} /> {/* <-- 2. ROUTE ADDED HERE */}
-            <Route path="/product/:id" element={<ProductPage />} />
-
-            {/* Private / User Routes */}
-            <Route path="/profile" element={<ProfilePage />} />
-            
-            {/* Admin Route */}
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </main>
-        
-        <Footer />
-      </div>
+      <AppContent />
     </Router>
   );
 }

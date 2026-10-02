@@ -10,7 +10,14 @@ const WishlistPage = () => {
   // Load wishlist items on mount and listen for changes
   useEffect(() => {
     const loadWishlist = () => {
-      const items = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+      let items = [];
+      try {
+        const stored = localStorage.getItem('wishlistItems');
+        items = stored ? JSON.parse(stored) : [];
+        if (!Array.isArray(items)) items = [];
+      } catch {
+        items = [];
+      }
       setWishlistItems(items);
     };
 
@@ -57,7 +64,7 @@ const WishlistPage = () => {
           </Card>
         ) : (
           <Row>
-            {wishlistItems.map((product, index) => (
+            {wishlistItems.map((product) => (
               <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
                 <ProductCard product={product} />
               </Col>

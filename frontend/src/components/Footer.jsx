@@ -1,99 +1,164 @@
-import React from 'react';
-import { Container, Row, Col, Form, Button, InputGroup } from 'react-bootstrap';
-import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { Container, Row, Col, Form, Button, InputGroup, Toast, ToastContainer } from 'react-bootstrap';
+import { 
+  FaFacebookF, 
+  FaTwitter, 
+  FaInstagram, 
+  FaLinkedinIn, 
+  FaEnvelope, 
+  FaPhone, 
+  FaMapMarkerAlt, 
+  FaPaperPlane, 
+  FaStore, 
+  FaCheckCircle,
+  FaShieldAlt,
+  FaArrowRight
+} from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 4000);
+    }
+  };
+
   return (
-    <footer className="text-light pt-5 mt-auto" style={{ background: 'linear-gradient(to right, #0f2027, #203a43, #2c5364)' }}>
-      <Container>
-        <Row className="py-4">
+    <footer className="elite-footer pt-5 mt-auto">
+      {/* Toast Confirmation */}
+      {subscribed && (
+        <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 9999 }}>
+          <Toast bg="success" onClose={() => setSubscribed(false)} delay={4000} autohide className="text-white border-0 shadow-lg">
+            <Toast.Body className="fw-semibold d-flex align-items-center gap-2">
+              <FaCheckCircle size={18} /> Thank you for subscribing! Check your inbox soon.
+            </Toast.Body>
+          </Toast>
+        </ToastContainer>
+      )}
+
+      <Container className="position-relative" style={{ zIndex: 2 }}>
+        <Row className="py-4 g-4">
           
-          
-          <Col lg={4} md={6} className="mb-4 pe-lg-5">
-            <div className="d-flex align-items-center mb-3">
-               <div className="bg-white text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style={{ width: '40px', height: '40px', fontSize: '1.2rem', fontWeight: 'bold' }}>E</div>
-               <h4 className="fw-bold mb-0 text-white">EliteShop</h4>
-            </div>
-            <p className="text-white-50 small" style={{ lineHeight: '1.8' }}>
-              Your premium destination for the latest trends in electronics, fashion, and lifestyle. 
-              We believe in quality, speed, and exceptional customer service.
+          {/* Column 1: Brand Info */}
+          <Col lg={4} md={6} className="mb-4 pe-lg-4">
+            <Link to="/" className="elite-brand-logo mb-3 d-inline-flex">
+              <div className="elite-logo-icon">
+                <FaStore size={18} />
+              </div>
+              <span className="elite-logo-text">
+                Elite<span className="elite-logo-accent">Shop</span>
+              </span>
+            </Link>
+
+            <p className="text-muted small mt-2 mb-4" style={{ lineHeight: '1.7', maxWidth: '320px' }}>
+              Your premium destination for the latest verified trends in electronics, fashion, home, and lifestyle essentials.
             </p>
-            <div className="d-flex gap-3 mt-4">
-              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map((Icon, index) => (
-                <a key={index} href="#" className="text-white bg-white bg-opacity-10 rounded-circle d-flex justify-content-center align-items-center hover-lift" style={{ width: '36px', height: '36px', transition: '0.3s' }}>
-                  <Icon size={14} />
+
+            <div className="d-flex gap-2">
+              {[
+                { icon: FaFacebookF, label: 'Facebook', href: '#' },
+                { icon: FaTwitter, label: 'Twitter', href: '#' },
+                { icon: FaInstagram, label: 'Instagram', href: '#' },
+                { icon: FaLinkedinIn, label: 'LinkedIn', href: '#' }
+              ].map((item, index) => (
+                <a 
+                  key={index} 
+                  href={item.href} 
+                  aria-label={item.label}
+                  className="elite-social-btn"
+                >
+                  <item.icon size={14} />
                 </a>
               ))}
             </div>
           </Col>
 
-        
-          <Col lg={2} md={6} className="mb-4">
-            <h6 className="text-uppercase fw-bold mb-4 text-warning" style={{ letterSpacing: '1px', fontSize: '0.9rem' }}>Shop</h6>
-            <ul className="list-unstyled text-white-50 small d-flex flex-column gap-2">
-              <li><Link to="/" className="text-decoration-none text-white-50 hover-text-white">Home</Link></li>
-              <li><Link to="/card" className="text-decoration-none text-white-50 hover-text-white">Shopping Cart</Link></li>
-              <li><Link to="/profile" className="text-decoration-none text-white-50 hover-text-white">My Account</Link></li>
-              <li><Link to="/login" className="text-decoration-none text-white-50 hover-text-white">Login / Register</Link></li>
-              
-             
+          {/* Column 2: Quick Links */}
+          <Col lg={2} sm={6} xs={6} className="mb-4">
+            <h6 className="elite-footer-title">Navigation</h6>
+            <ul className="list-unstyled d-flex flex-column gap-2 mb-0">
+              <li><Link to="/" className="elite-footer-link">Home Storefront</Link></li>
+              <li><Link to="/card" className="elite-footer-link">Shopping Bag</Link></li>
+              <li><Link to="/wishlist" className="elite-footer-link">My Wishlist</Link></li>
+              <li><Link to="/profile" className="elite-footer-link">User Account</Link></li>
+              <li><Link to="/login" className="elite-footer-link">Sign In</Link></li>
               <li>
-                <Link to="/admin" className="text-decoration-none text-warning fw-bold hover-text-white">
-                  Admin Dashboard
+                <Link to="/admin" className="elite-footer-admin-link mt-1">
+                  <FaShieldAlt size={12} /> Admin Portal
                 </Link>
               </li>
             </ul>
           </Col>
 
-          
-          <Col lg={3} md={6} className="mb-4">
-            <h6 className="text-uppercase fw-bold mb-4 text-warning" style={{ letterSpacing: '1px', fontSize: '0.9rem' }}>Contact</h6>
-            <ul className="list-unstyled text-white-50 small d-flex flex-column gap-3">
-              <li className="d-flex align-items-start">
-                <FaMapMarkerAlt className="me-2 text-warning mt-1" /> 
-                <span>123 Innovation Dr,<br />Tech Valley, CA 94043</span>
+          {/* Column 3: Contact Details */}
+          <Col lg={3} sm={6} xs={6} className="mb-4">
+            <h6 className="elite-footer-title">Contact Support</h6>
+            <ul className="list-unstyled d-flex flex-column gap-3 mb-0">
+              <li className="elite-footer-contact-item">
+                <div className="elite-footer-contact-icon">
+                  <FaMapMarkerAlt />
+                </div>
+                <span>123 Innovation Way,<br />Tech Park, CA 94043</span>
               </li>
-              <li className="d-flex align-items-center">
-                <FaEnvelope className="me-2 text-warning" /> support@eliteshop.com
+              <li className="elite-footer-contact-item">
+                <div className="elite-footer-contact-icon">
+                  <FaEnvelope />
+                </div>
+                <span>support@eliteshop.com</span>
               </li>
-              <li className="d-flex align-items-center">
-                <FaPhone className="me-2 text-warning" /> +1 (800) 123-4567
+              <li className="elite-footer-contact-item">
+                <div className="elite-footer-contact-icon">
+                  <FaPhone />
+                </div>
+                <span>+1 (800) 123-4567</span>
               </li>
             </ul>
           </Col>
 
-          
+          {/* Column 4: Newsletter */}
           <Col lg={3} md={6} className="mb-4">
-            <h6 className="text-uppercase fw-bold mb-4 text-warning" style={{ letterSpacing: '1px', fontSize: '0.9rem' }}>Stay Updated</h6>
-            <p className="small text-white-50 mb-3">Subscribe to get 10% off your first order.</p>
-            <Form>
-              <InputGroup className="mb-3">
+            <h6 className="elite-footer-title">Newsletter</h6>
+            <p className="small text-muted mb-3">
+              Subscribe to unlock 10% off your next order and exclusive seasonal drops.
+            </p>
+            <Form onSubmit={handleSubscribe}>
+              <InputGroup className="mb-2">
                 <Form.Control
-                  placeholder="Your email address"
-                  className="bg-white bg-opacity-10 border-0 text-white placeholder-white-50"
-                  style={{ backdropFilter: 'blur(5px)' }}
+                  type="email"
+                  placeholder="name@example.com"
+                  className="elite-newsletter-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
-                <Button variant="warning" className="text-dark fw-bold">
-                  <FaPaperPlane />
+                <Button type="submit" className="elite-newsletter-btn">
+                  <FaPaperPlane size={13} />
                 </Button>
               </InputGroup>
             </Form>
-            <small className="text-white-50" style={{ fontSize: '0.75rem' }}>We respect your privacy. Unsubscribe anytime.</small>
+            <small className="text-muted" style={{ fontSize: '0.72rem' }}>
+              🔒 No spam ever. Unsubscribe anytime.
+            </small>
           </Col>
         </Row>
 
-        <hr className="border-secondary opacity-25 my-4" />
+        <hr className="my-4" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
 
-       
-        <div className="pb-4 d-flex flex-column flex-md-row justify-content-between align-items-center small text-white-50">
-          <p className="mb-2 mb-md-0">
-            &copy; {new Date().getFullYear()} EliteShop Inc. All Rights Reserved.
+        {/* Bottom Legal / Copyright */}
+        <div className="pb-4 d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted gap-2">
+          <p className="mb-0">
+            &copy; {new Date().getFullYear()} EliteShop Inc. All rights reserved.
           </p>
           <div className="d-flex gap-4">
-            <a href="#" className="text-decoration-none text-white-50 hover-text-white">Privacy Policy</a>
-            <a href="#" className="text-decoration-none text-white-50 hover-text-white">Terms of Service</a>
-            <a href="#" className="text-decoration-none text-white-50 hover-text-white">Cookie Policy</a>
+            <a href="#" className="elite-footer-link" style={{ fontSize: '0.8rem' }}>Privacy Policy</a>
+            <a href="#" className="elite-footer-link" style={{ fontSize: '0.8rem' }}>Terms of Service</a>
+            <a href="#" className="elite-footer-link" style={{ fontSize: '0.8rem' }}>Security & Cookies</a>
           </div>
         </div>
       </Container>

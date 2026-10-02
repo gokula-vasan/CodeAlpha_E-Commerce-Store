@@ -11,7 +11,14 @@ const CardPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const items = JSON.parse(localStorage.getItem('cartItems')) || [];
+    let items = [];
+    try {
+      const stored = localStorage.getItem('cartItems');
+      items = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(items)) items = [];
+    } catch {
+      items = [];
+    }
     const itemsWithQty = items.map(item => ({ ...item, qty: item.qty || 1 }));
     setCartItems(itemsWithQty);
   }, []);
@@ -41,11 +48,17 @@ const CardPage = () => {
     }
   };
 
-  const baseTotalPrice = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const totalItems = cartItems.reduce((acc, item) => acc + item.qty, 0);
+  const baseTotalPrice = cartItems.reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
+  const totalItems = cartItems.reduce((acc, item) => acc + (Number(item.qty) || 1), 0);
 
   const checkoutHandler = async () => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    let userInfo = null;
+    try {
+      const stored = localStorage.getItem('userInfo');
+      userInfo = stored ? JSON.parse(stored) : null;
+    } catch {
+      userInfo = null;
+    }
     
     if (!userInfo) {
         alert("Please Sign In to Place an Order");
@@ -55,24 +68,21 @@ const CardPage = () => {
 
     try {
         setLoadingCheckout(true);
-        const config = {
-            headers: { Authorization: `Bearer ${userInfo.token}` },
-        };
 
         const orderItemsToSend = cartItems.map(item => ({
             name: item.name,
-            qty: item.qty,
+            qty: Number(item.qty) || 1,
             image: item.image,
-            price: Number(item.price), // Sending the raw INR price
+            price: Number(item.price) || 0,
             product: item._id 
         }));
 
         const orderData = {
             orderItems: orderItemsToSend,
-            totalPrice: baseTotalPrice // Sending the raw INR total
+            totalPrice: baseTotalPrice
         };
 
-        await api.post('/orders', orderData, config);
+        await api.post('/orders', orderData);
 
         alert('Order Placed Successfully!');
         updateCart([]); 
@@ -129,6 +139,10 @@ const CardPage = () => {
                                 alt={item.name} 
                                 fluid 
                                 style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} 
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23adb5bd' font-size='10'%3ENo Img%3C/text%3E%3C/svg%3E";
+                                }}
                               />
                           </div>
                         </Col>

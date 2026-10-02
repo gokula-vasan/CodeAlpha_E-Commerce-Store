@@ -26,14 +26,21 @@ const ProfilePage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const navigate = useNavigate();
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
   useEffect(() => {
+    let userInfo = null;
+    try {
+      const stored = localStorage.getItem('userInfo');
+      userInfo = stored ? JSON.parse(stored) : null;
+    } catch {
+      userInfo = null;
+    }
+
     if (!userInfo) {
       navigate('/login');
     } else {
-      setName(userInfo.name);
-      setEmail(userInfo.email);
+      setName(userInfo.name || '');
+      setEmail(userInfo.email || '');
       fetchMyOrders();
     }
   }, [navigate]);
@@ -41,10 +48,7 @@ const ProfilePage = () => {
   const fetchMyOrders = async () => {
     try {
       setLoadingOrders(true);
-      const config = {
-        headers: { Authorization: `Bearer ${userInfo.token}` },
-      };
-      const { data } = await api.get('/orders/myorders', config);
+      const { data } = await api.get('/orders/myorders');
       setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -53,29 +57,25 @@ const ProfilePage = () => {
     }
   };
 
-  // --- NEW: Profile Update Handler ---
+  // --- Profile Update Handler ---
   const submitUpdateHandler = async (e) => {
     e.preventDefault();
     setUpdateError('');
     setUpdateSuccess(false);
 
-    if (password !== confirmPassword) {
+    if (password && password !== confirmPassword) {
       setUpdateError('Passwords do not match');
       return;
     }
 
     try {
       setUpdateLoading(true);
-      const config = {
-        headers: { Authorization: `Bearer ${userInfo.token}` },
-      };
+      const updateData = { name, email };
+      if (password) {
+        updateData.password = password;
+      }
 
-      // Ensure your backend has a PUT route for /api/users/profile
-      const { data } = await api.put(
-        '/users/profile',
-        { id: userInfo._id, name, email, password },
-        config
-      );
+      const { data } = await api.put('/users/profile', updateData);
 
       // Update Local Storage with new User Info
       localStorage.setItem('userInfo', JSON.stringify(data));
@@ -240,11 +240,14 @@ const ProfilePage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {orders.map((order) => (
-                          <tr key={order._id} className="border-bottom">
-                            <td className="fw-bold text-primary">...{order._id.substring(order._id.length - 6)}</td>
-                            <td>{order.createdAt.substring(0, 10)}</td>
-                            <td className="fw-bold">{formatToINR(order.totalPrice)}</td>
+                        {Array.isArray(orders) && orders.map((order) => {
+                          const orderId = order?._id ? String(order._id) : '';
+                          const dateStr = order?.createdAt ? String(order.createdAt).substring(0, 10) : 'Recent';
+                          return (
+                            <tr key={order._id} className="border-bottom">
+                              <td className="fw-bold text-primary">...{orderId.slice(-6)}</td>
+                              <td>{dateStr}</td>
+                              <td className="fw-bold">{formatToINR(order.totalPrice || 0)}</td>
                             <td>
                               {order.isPaid ? (
                                 <FaCheck className="text-success" />
@@ -269,8 +272,9 @@ const ProfilePage = () => {
                                 <FaEye className="me-1" /> View
                               </Button>
                             </td>
-                          </tr>
-                        ))}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </Table>
                   </div>
@@ -303,7 +307,7 @@ const ProfilePage = () => {
                     <p className="small text-muted text-uppercase fw-bold mb-1">Date Placed</p>
                     <h6 className="fw-bold text-dark d-flex align-items-center mb-0">
                       <FaCalendarAlt className="me-2 text-primary" /> 
-                      {selectedOrder.createdAt.substring(0, 10)}
+                      {selectedOrder?.createdAt ? String(selectedOrder.createdAt).substring(0, 10) : 'Recent'}
                     </h6>
                  </div>
                </Col>

@@ -29,8 +29,10 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const safeProducts = Array.isArray(products) ? products : [];
+  const filteredProducts = safeProducts.filter((product) => {
+    if (!product || typeof product.name !== 'string') return false;
+    const matchesSearch = product.name.toLowerCase().includes((searchTerm || '').toLowerCase().trim());
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -106,7 +108,7 @@ const Home = () => {
       <Container className="my-5 fade-in">
         <Row className="g-4">
           {[ 
-            { icon: FaShippingFast, title: "Free Shipping", text: "On orders over $50" },
+            { icon: FaShippingFast, title: "Free Shipping", text: "On all orders" },
             { icon: FaHeadset, title: "24/7 Support", text: "Expert help anytime" },
             { icon: FaMoneyBillWave, title: "Money Back", text: "30 days guarantee" },
             { icon: FaLock, title: "Secure Payment", text: "100% protected" }

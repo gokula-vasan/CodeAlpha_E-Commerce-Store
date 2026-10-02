@@ -110,3 +110,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Local Database
+backend/data/db/
+data/db/

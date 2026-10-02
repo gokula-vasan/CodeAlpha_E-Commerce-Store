@@ -1,47 +1,60 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const cors = require('cors'); // <--- Make sure this is installed
+const cors = require('cors');
 const connectDB = require('./config/db');
 
-// Route files
-const productRoutes = require('./routes/productRoutes');
-const userRoutes = require('./routes/userRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-
+// Load environment variables before anything else
 dotenv.config();
+
+// Connect to database
 connectDB();
 
 const app = express();
 
-// --- CORS CONFIGURATION (Fixes Network Error) ---
+// --- CORS Configuration ---
+const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : ['http://localhost:5173'];
+
 app.use(cors({
-    origin: 'http://localhost:5173', // Allow your React Frontend
-    credentials: true // Allow cookies/headers if needed
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
 }));
 
-app.use(express.json()); 
+// Body parser
+app.use(express.json());
 
 // Mount Routes
+const productRoutes = require('./routes/productRoutes');
+const userRoutes = require('./routes/userRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 
-// Root Route
+// Root health check
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.json({ message: 'API is running...', env: process.env.NODE_ENV });
 });
 
-// Error Handling
+// 404 Handler
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`);
     res.status(404);
     next(error);
 });
 
+// Global Error Handler
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    res.status(statusCode);
-    res.json({
+    res.status(statusCode).json({
         message: err.message,
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
     });

@@ -1,14 +1,27 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { FaUser, FaEnvelope, FaLock, FaUserPlus } from 'react-icons/fa'; // Removed FaGoogle
+import { 
+  FaUser, 
+  FaEnvelope, 
+  FaLock, 
+  FaEye, 
+  FaEyeSlash, 
+  FaUserPlus, 
+  FaStore, 
+  FaArrowLeft
+} from 'react-icons/fa';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
+  
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -18,136 +31,200 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match. Please verify.');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setError('Please agree to the Terms of Service & Privacy Policy.');
       return;
     }
 
     setLoading(true);
-    
+
     try {
       const { data } = await api.post('/users/register', { name, email, password });
-      
       localStorage.setItem('userInfo', JSON.stringify(data));
-      
-      window.dispatchEvent(new Event("storage"));
-      
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
       navigate('/');
-      
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div className="elite-auth-page">
+      <div className="elite-auth-card-clean">
         
-        {/* Left Side Image */}
-        <div className="auth-image" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
-          <div className="auth-image-text">
-            <h2>Join EliteShop</h2>
-            <p>Create an account to track orders, save items, and get exclusive offers.</p>
-          </div>
+        {/* Top Brand Logo */}
+        <div className="text-center mb-4">
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
+            <div 
+              className="rounded-circle d-flex align-items-center justify-content-center text-primary shadow-sm"
+              style={{ width: '44px', height: '44px', background: '#f1f5f9' }}
+            >
+              <FaStore size={22} />
+            </div>
+            <span className="fs-3 fw-bold text-dark tracking-wide">EliteShop</span>
+          </Link>
+          <h4 className="fw-bold text-dark mt-2 mb-1">Create Account</h4>
+          <p className="text-muted small mb-0">Fill in your credentials to register</p>
         </div>
 
-        {/* Right Side Form */}
-        <div className="auth-form-wrapper">
-          <div className="text-center mb-4">
-            <h2 style={{ fontWeight: 'bold', color: '#333' }}>Create Account</h2>
-            <p className="text-muted">It's free and takes 1 minute</p>
+        {/* Tab Switcher */}
+        <div className="elite-tab-switcher">
+          <button 
+            type="button" 
+            className="elite-tab-btn"
+            onClick={() => navigate('/login')}
+          >
+            Sign In
+          </button>
+          <button type="button" className="elite-tab-btn active">
+            Create Account
+          </button>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="danger" className="py-2 px-3 mb-3 small d-flex align-items-center border-0 rounded-3 shadow-sm">
+            <span>{error}</span>
+          </Alert>
+        )}
+
+        {/* Registration Credentials Form */}
+        <form onSubmit={submitHandler}>
+          
+          {/* Full Name Field */}
+          <div className="elite-input-group">
+            <FaUser className="elite-input-icon" />
+            <input 
+              type="text"
+              className="elite-input-field"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+            />
           </div>
 
-          {error && <Alert variant="danger" className="text-center">{error}</Alert>}
+          {/* Email Field */}
+          <div className="elite-input-group">
+            <FaEnvelope className="elite-input-icon" />
+            <input 
+              type="email"
+              className="elite-input-field"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
 
-          <Form onSubmit={submitHandler}>
-            
-            {/* Full Name Input */}
-            <Form.Group className="mb-3 position-relative">
-              <Form.Control 
-                type="text" 
-                placeholder="Full Name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                required 
-                style={{ paddingLeft: '40px', height: '50px' }}
-              />
-              <FaUser style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
-            </Form.Group>
-
-            {/* Email Input */}
-            <Form.Group className="mb-3 position-relative">
-              <Form.Control 
-                type="email" 
-                placeholder="Email Address" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
-                style={{ paddingLeft: '40px', height: '50px' }}
-              />
-              <FaEnvelope style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
-            </Form.Group>
-
-            {/* Password Input */}
-            <Form.Group className="mb-3 position-relative">
-              <Form.Control 
-                type="password" 
-                placeholder="Password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
-                style={{ paddingLeft: '40px', height: '50px' }}
-              />
-              <FaLock style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
-            </Form.Group>
-
-            {/* Confirm Password Input */}
-            <Form.Group className="mb-3 position-relative">
-              <Form.Control 
-                type="password" 
-                placeholder="Confirm Password" 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)} 
-                required 
-                style={{ paddingLeft: '40px', height: '50px' }}
-              />
-              <FaLock style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
-            </Form.Group>
-
-            {/* Terms & Conditions Checkbox */}
-            <Form.Group className="mb-4">
-              <Form.Check 
-                required
-                label={<span className="small text-muted">I agree to the <a href="#" style={{textDecoration:'none', color: '#764ba2'}}>Terms & Conditions</a></span>}
-                feedback="You must agree before submitting."
-                feedbackType="invalid"
-              />
-            </Form.Group>
-
-            {/* Submit Button */}
-            <Button 
-              variant="primary" 
-              type="submit" 
-              className="w-100 custom-btn text-white rounded-pill d-flex align-items-center justify-content-center"
-              disabled={loading}
+          {/* Password Field */}
+          <div className="elite-input-group">
+            <FaLock className="elite-input-icon" />
+            <input 
+              type={showPassword ? 'text' : 'password'}
+              className="elite-input-field"
+              placeholder="Password (min. 6 characters)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
+            <button 
+              type="button" 
+              className="elite-password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex="-1"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {loading ? (
-                <>
-                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                  Creating Account...
-                </>
-              ) : (
-                <><FaUserPlus className="me-2" /> Sign Up</>
-              )}
-            </Button>
-          </Form>
-
-          {/* Already have an account link */}
-          <div className="text-center mt-4">
-            <p className="text-muted">Already have an account? <Link to="/login" style={{ color: '#764ba2', fontWeight: 'bold' }}>Log In</Link></p>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
+
+          {/* Confirm Password Field */}
+          <div className="elite-input-group">
+            <FaLock className="elite-input-icon" />
+            <input 
+              type={showConfirmPassword ? 'text' : 'password'}
+              className="elite-input-field"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
+            <button 
+              type="button" 
+              className="elite-password-toggle"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              tabIndex="-1"
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            >
+              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          {/* Terms & Conditions Checkbox */}
+          <div className="mb-4 small">
+            <label className="d-flex align-items-center gap-2 text-muted mb-0" style={{ cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                className="form-check-input mt-0" 
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+              />
+              <span>
+                I agree to the <a href="#" onClick={(e) => e.preventDefault()} className="text-primary text-decoration-none">Terms & Conditions</a>
+              </span>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <button 
+            type="submit" 
+            className="elite-primary-btn"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              <>
+                <FaUserPlus />
+                <span>Create Account</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Switch to Sign In */}
+        <div className="text-center mt-4 pt-2">
+          <p className="text-muted small mb-3">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary fw-bold text-decoration-none">
+              Sign In
+            </Link>
+          </p>
+
+          <Link to="/" className="text-decoration-none text-muted small d-inline-flex align-items-center gap-1">
+            <FaArrowLeft size={10} /> Back to Store
+          </Link>
         </div>
 
       </div>

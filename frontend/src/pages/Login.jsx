@@ -1,18 +1,29 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
-import { FaEnvelope, FaLock, FaSignInAlt } from 'react-icons/fa'; // Removed FaGoogle
+import { 
+  FaEnvelope, 
+  FaLock, 
+  FaEye, 
+  FaEyeSlash, 
+  FaSignInAlt, 
+  FaStore, 
+  FaArrowLeft
+} from 'react-icons/fa';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
-
-  const redirect = location.search ? location.search.split('=')[1] : '/';
+  const searchParams = new URLSearchParams(location.search);
+  const redirectParam = searchParams.get('redirect');
+  const redirect = redirectParam ? (redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`) : '/';
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -21,103 +32,137 @@ const Login = () => {
 
     try {
       const { data } = await api.post('/users/login', { email, password });
-      
       localStorage.setItem('userInfo', JSON.stringify(data));
-      
-      window.dispatchEvent(new Event("storage"));
-
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
       navigate(redirect);
-      
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(err.response?.data?.message || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div className="elite-auth-page">
+      <div className="elite-auth-card-clean">
         
-        {/* Left Side Image */}
-        <div className="auth-image" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1570857502809-08184874388e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
-          <div className="auth-image-text">
-            <h2>Welcome Back!</h2>
-            <p>Access your orders, wishlist, and recommendations.</p>
-          </div>
+        {/* Top Brand Logo */}
+        <div className="text-center mb-4">
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
+            <div 
+              className="rounded-circle d-flex align-items-center justify-content-center text-primary shadow-sm"
+              style={{ width: '44px', height: '44px', background: '#f1f5f9' }}
+            >
+              <FaStore size={22} />
+            </div>
+            <span className="fs-3 fw-bold text-dark tracking-wide">EliteShop</span>
+          </Link>
+          <h4 className="fw-bold text-dark mt-2 mb-1">Sign In</h4>
+          <p className="text-muted small mb-0">Enter your credentials to access your account</p>
         </div>
 
-        {/* Right Side Form */}
-        <div className="auth-form-wrapper">
-          <div className="text-center mb-4">
-            <h2 style={{ fontWeight: 'bold', color: '#333' }}>Sign In</h2>
-            <p className="text-muted">Please login to continue shopping</p>
+        {/* Tab Switcher */}
+        <div className="elite-tab-switcher">
+          <button type="button" className="elite-tab-btn active">
+            Sign In
+          </button>
+          <button 
+            type="button" 
+            className="elite-tab-btn" 
+            onClick={() => navigate('/register')}
+          >
+            Create Account
+          </button>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="danger" className="py-2 px-3 mb-3 small d-flex align-items-center border-0 rounded-3 shadow-sm">
+            <span>{error}</span>
+          </Alert>
+        )}
+
+        {/* Login Credentials Form */}
+        <form onSubmit={submitHandler}>
+          
+          {/* Email Field */}
+          <div className="elite-input-group">
+            <FaEnvelope className="elite-input-icon" />
+            <input 
+              type="email"
+              className="elite-input-field"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
           </div>
 
-          {error && <Alert variant="danger" className="text-center">{error}</Alert>}
-
-          <Form onSubmit={submitHandler}>
-            
-            {/* Email Input */}
-            <Form.Group className="mb-3 position-relative">
-              <Form.Control 
-                type="email" 
-                placeholder="Email Address" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required
-                style={{ paddingLeft: '40px', height: '50px' }}
-              />
-              <FaEnvelope style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
-            </Form.Group>
-
-            {/* Password Input */}
-            <Form.Group className="mb-3 position-relative">
-              <Form.Control 
-                type="password" 
-                placeholder="Password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required
-                style={{ paddingLeft: '40px', height: '50px' }}
-              />
-              <FaLock style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
-            </Form.Group>
-
-            {/* Remember Me Checkbox */}
-            <div className="mb-4">
-              <Form.Check 
-                type="checkbox" 
-                label="Remember me" 
-                id="custom-checkbox"
-                className="text-muted small"
-              />
-            </div>
-
-            {/* Sign In Button */}
-            <Button 
-              variant="primary" 
-              type="submit" 
-              className="w-100 custom-btn text-white rounded-pill d-flex align-items-center justify-content-center"
-              disabled={loading}
+          {/* Password Field */}
+          <div className="elite-input-group">
+            <FaLock className="elite-input-icon" />
+            <input 
+              type={showPassword ? 'text' : 'password'}
+              className="elite-input-field"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+            <button 
+              type="button" 
+              className="elite-password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex="-1"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {loading ? (
-                <>
-                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                  Signing In...
-                </>
-              ) : (
-                <><FaSignInAlt className="me-2" /> Sign In</>
-              )}
-            </Button>
-          </Form>
-
-          {/* New Customer Registration Link */}
-          <div className="text-center mt-4">
-            <p className="text-muted">
-              New Customer? <Link to="/register" style={{ color: '#764ba2', fontWeight: 'bold' }}>Create an Account</Link>
-            </p>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
+
+          {/* Remember Me Checkbox */}
+          <div className="d-flex align-items-center mb-4 small">
+            <label className="d-flex align-items-center gap-2 text-muted mb-0 cursor-pointer" style={{ cursor: 'pointer' }}>
+              <input type="checkbox" className="form-check-input mt-0" defaultChecked />
+              <span>Remember me</span>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <button 
+            type="submit" 
+            className="elite-primary-btn"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                <span>Signing In...</span>
+              </>
+            ) : (
+              <>
+                <FaSignInAlt />
+                <span>Sign In</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Switch to Register */}
+        <div className="text-center mt-4 pt-2">
+          <p className="text-muted small mb-3">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary fw-bold text-decoration-none">
+              Create Account
+            </Link>
+          </p>
+          
+          <Link to="/" className="text-decoration-none text-muted small d-inline-flex align-items-center gap-1">
+            <FaArrowLeft size={10} /> Back to Store
+          </Link>
         </div>
 
       </div>

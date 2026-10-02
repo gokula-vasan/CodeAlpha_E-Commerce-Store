@@ -29,13 +29,21 @@ const getProductById = async (req, res) => {
 const createProduct = async (req, res) => {
     try {
         const { name, description, price, category, image, countInStock } = req.body;
+        if (!name || price === undefined) {
+            return res.status(400).json({ message: 'Product name and price are required' });
+        }
         const product = new Product({
-            name, description, price, category, image, countInStock
+            name,
+            description: description || '',
+            price: Number(price),
+            category: category || 'General',
+            image: image || '',
+            countInStock: Number(countInStock) || 0
         });
         const createdProduct = await product.save();
         res.status(201).json(createdProduct);
     } catch (error) {
-        res.status(500).json({ message: 'Product creation failed' });
+        res.status(400).json({ message: error.message || 'Product creation failed' });
     }
 };
 
@@ -47,13 +55,14 @@ const updateProduct = async (req, res) => {
         const product = await Product.findById(req.params.id);
 
         if (product) {
-          
-            product.name = name || product.name;
-            product.price = price || product.price;
-            product.description = description || product.description;
-            product.image = image || product.image;
-            product.category = category || product.category;
-            product.countInStock = countInStock; 
+            product.name = name !== undefined ? name : product.name;
+            product.price = price !== undefined ? Number(price) : product.price;
+            product.description = description !== undefined ? description : product.description;
+            product.image = image !== undefined ? image : product.image;
+            product.category = category !== undefined ? category : product.category;
+            if (countInStock !== undefined) {
+                product.countInStock = Number(countInStock);
+            }
 
             const updatedProduct = await product.save();
             res.json(updatedProduct);
@@ -61,7 +70,8 @@ const updateProduct = async (req, res) => {
             res.status(404).json({ message: 'Product not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Update Product Error:', error.message);
+        res.status(400).json({ message: error.message || 'Server Error' });
     }
 };
 
